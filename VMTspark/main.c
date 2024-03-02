@@ -29,7 +29,8 @@ ISR(TIM0_COMPA_vect){
 }
 
 inline void timer_ini(){
-	SREG |= (1<<7); // interupts on
+	//SREG |= (1<<7); // interupts on
+	sei();
 	TCCR0B |= (1<<CS01); // 8x
 	TCNT0 = 0;
 	OCR0A = 38;
@@ -39,12 +40,11 @@ inline void timer_ini(){
 
 
 inline void calcAngle(){
-	if (rpm<1000) angle = 2;
-	else if(rpm<3000) angle = 27*rpm/2000 - 10;
-	else if(rpm<7000) angle = 8*rpm/2000 + 18;
-	
-	angle = constrain(angle, 0, 38);
-	//angle = map(rpm, 1000,);
+		if (rpm<1000) angle = 2;
+		else if(rpm<3000) angle = 27*rpm/2000 - 10;
+		else if(rpm<7000) angle = 8*rpm/2000 + 18;
+		
+		angle = constrain(angle, 0, 38);
 }
 
 inline void setup(){
@@ -64,7 +64,7 @@ inline void loop(){
 	if (old_modulator_state && !modulator_state){//шторка відкрилась
 		open_time = micros;
 		
-		diff_time = open_time - old_open_time;		// розрахунок оборотів двигуна
+		diff_time = open_time - old_open_time;		// розрахунок оборотів двигуна		
 		rpm = 60000000UL/diff_time;
 		
 		calcAngle();
@@ -72,12 +72,14 @@ inline void loop(){
 		new_start = open_time + (diff_time / 36)*(360 - angle)/10;  // розрахунок часу відкриття та закриття
 		new_end = new_start + diff_time/4; // 90 градусів
 		
+		old_start = micros;
+		
 		old_open_time = open_time;
 	}
 	old_modulator_state = modulator_state;
 	
 	
-	if (old_start < micros && micros < old_end && rpm>80 && (!(PINB & (1<<PB1)) || rpm<3000)){
+	if (old_start <= micros && micros <= old_end){
 			PORTB &= ~(1<<PB0);
 		}else{
 			old_start = new_start;
