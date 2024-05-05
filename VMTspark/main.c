@@ -40,11 +40,12 @@ inline void timer_ini(){
 
 
 inline void calcAngle(){
-		if (rpm<1000) angle = 2;
+		if (rpm<1000) angle = 0;
 		else if(rpm<3000) angle = 27*rpm/2000 - 10;
-		else if(rpm<7000) angle = 8*rpm/2000 + 18;
+		//else if(rpm<7000) angle = 8*rpm/2000 + 18;
 		
 		angle = constrain(angle, 0, 38);
+		//angle = 0;
 }
 
 inline void setup(){
@@ -80,13 +81,20 @@ inline void loop(){
 	
 	
 	if (old_start <= micros && micros <= old_end){
-			PORTB &= ~(1<<PB0);
+			//PORTB &= ~(1<<PB0);
+			PORTB |= (1<<PB0);
 		}else{
 			old_start = new_start;
 			old_end = new_end;
-			PORTB |= (1<<PB0);
+			//PORTB |= (1<<PB0);
+			PORTB &= ~(1<<PB0);
 	}
-
+	
+	if((old_end - old_start) > 600000){  // фікс простою.
+		old_start = 0;
+		old_end = 0;
+	}
+	
 }
 
 int main(void)
